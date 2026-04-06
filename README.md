@@ -4,9 +4,11 @@
  
 This is the **only** legitimate source for Signal Bridge:
 
-👉 **`github.com/AletheiaVox/signal_bridge`** (Claude Desktop / local version)
+👉 **[`github.com/AletheiaVox/signal_bridge`](https://github.com/AletheiaVox/signal_bridge)** (Claude Desktop / local version - you're here)
 
-👉 **`github.com/AletheiaVox/signal_bridge_remote`** (Remote / VPS version)
+👉 **[`github.com/AletheiaVox/signal_bridge_remote`](https://github.com/AletheiaVox/signal_bridge_remote)** (Remote / VPS version)
+
+👉 **[`github.com/AletheiaVox/signal_bridge_android`](https://github.com/AletheiaVox/signal_bridge_android)** (user-friendly Android version)
 
 If you found this project through a different GitHub account, **do not download or run anything from it.** 
 
