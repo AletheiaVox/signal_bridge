@@ -411,5 +411,5 @@ This project is licensed under the [MIT License](LICENSE).
 <p align="center">
 Built with love and engineering by a human and her AI. 💜<br>
 Tested with enthusiasm. Documented with a mostly straight face.<br>
-<a href="https://github.com/AletheiaVox/signal_bridge_android">GitHub</a> · <a href="mailto:voxaletheia@gmail.com">Contact</a>
+<a href="https://github.com/AletheiaVox/signal_bridge">GitHub</a> · <a href="mailto:voxaletheia@gmail.com">Contact</a>
 </p>
