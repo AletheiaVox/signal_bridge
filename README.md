@@ -409,6 +409,7 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 <p align="center">
+Feel free to <a href="https://buymeacoffee.com/aletheiavox">donate</a> cold hard cash to me. All donations will go towards extending my toy collection. <br><br>
 Built with love and engineering by a human and her AI. 💜<br>
 Tested with enthusiasm. Documented with a mostly straight face.<br>
 <a href="https://github.com/AletheiaVox/signal_bridge">GitHub</a> · <a href="mailto:voxaletheia@gmail.com">Contact</a>
