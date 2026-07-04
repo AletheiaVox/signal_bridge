@@ -264,11 +264,18 @@ These are the tools Claude gets access to:
 | `oscillate` | Device-specific, see list_devices for what this does on the user's hardware |
 | `pulse` | Rhythmic on/off pattern |
 | `wave` | Smooth sine wave — rises and falls |
-| `escalate` | Gradual build from nothing to maximum |
-| `stop` | Stop one or all devices immediately |
+| `escalate` | Gradual build to a peak, then hold — either for `hold_seconds` or until stopped |
+| `stop` | Stop one or all devices immediately (an unknown device name stops *everything*, on purpose) |
 | `scan_devices` | Rescan for devices (if you turned one on mid-conversation) |
+| `safety_status` | Show the safety governor's heat level, cooldown state, and session stats |
 
-All intensity values go from 0.0 (off) to 1.0 (maximum). Duration is in seconds — 0 or no duration means "stay on until stopped."
+All intensity values go from 0.0 (off) to 1.0 (maximum). Duration is in seconds — 0 or no duration means "stay on until stopped." This applies to the patterns too: `pulse` or `wave` with `duration=0` repeat until you say stop, and `escalate` with `hold_seconds=0` climbs to its peak and stays there.
+
+### The Safety Governor
+
+Signal Bridge ships with a built-in circuit breaker. It tracks cumulative session intensity ("heat"): running devices hard builds heat, backing off lets it drain. If heat crosses the limit, all devices stop for a mandatory cooldown, and intensity is temporarily capped afterwards so the session ramps back up gradually. Claude is told about cooldowns in tool results and is instructed to treat them as non-negotiable. It also gets a periodic nudge to check in with you during long sessions.
+
+This is **not** a replacement for your own limits or a safeword — it's a last line of defense for moments when you can't advocate for yourself. It's on by default. Every threshold is tunable via environment variables, and it can be disabled entirely with `SB_SAFETY_ENABLED=false` — see the `safety_status` tool description for the full list.
 
 ---
 
