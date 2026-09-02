@@ -152,6 +152,12 @@ If the file **already has content** (you have other MCP servers), add the `"sign
 
 > **Mac users:** If you installed Python 3 separately, you may need to change `"command": "python"` to `"command": "python3"`.
 
+> **Using Claude Code in the terminal instead of Claude Desktop?** Skip the config file and register the server with one command (use `python3` on Mac):
+> ```
+> claude mcp add signal-bridge -- python3 /FULL/PATH/TO/signal_bridge_mcp.py
+> ```
+> Then start a new `claude` session. Environment variables such as `SB_SAFETY_ENABLED=false` go in a `.env` file next to `signal_bridge_mcp.py`, or on the command line as `claude mcp add signal-bridge -e SB_SAFETY_ENABLED=false -- python3 ...`.
+
 > **Stuck?** Copy this entire README and paste it into a conversation with Claude on the Desktop App. Say: *"I downloaded Signal Bridge and I need help editing my claude_desktop_config.json. Here's where I saved the files: [your path]."* Claude can walk you through it or even edit the file for you if you're using Claude with computer access (the Filesystem connector).
 
 ### Step 6: Restart Claude and Verify
@@ -269,7 +275,18 @@ These are the tools Claude gets access to:
 | `scan_devices` | Rescan for devices (if you turned one on mid-conversation) |
 | `safety_status` | Show the safety governor's heat level, cooldown state, and session stats |
 
-All intensity values go from 0.0 (off) to 1.0 (maximum). Duration is in seconds — 0 or no duration means "stay on until stopped." This applies to the patterns too: `pulse` or `wave` with `duration=0` repeat until you say stop, and `escalate` with `hold_seconds=0` climbs to its peak and stays there.
+All intensity values go from 0.0 (off) to 1.0 (maximum). Duration is in seconds — 0 or no duration means "stay on until stopped." This applies to the patterns too: `pulse` or `wave` with `duration=0` repeat until you say stop, and `escalate` with `hold_seconds=0` climbs to its peak and stays there. Note that `pulse` and `wave` have *default* durations (10 and 15 seconds) — if Claude starts one without a duration, it ends by itself. That's not a dropout.
+
+### Dropouts and Reconnects
+
+Bluetooth is Bluetooth. Since v0.5 Signal Bridge treats dropouts as routine rather than fatal:
+
+- **One toy drops:** only that toy is marked offline. Everything else keeps running. When Intiface reconnects it, it comes back automatically, and whatever it was doing resumes if the gap was short (under `SB_PATTERN_GRACE` seconds, default 20). A longer gap means it stays off until Claude sends a new command — a toy you switched off on purpose shouldn't start buzzing when you switch it back on.
+- **Intiface Central drops:** the server notices immediately and retries in the background for up to `SB_RECONNECT_WINDOW` seconds (default 120). Running patterns ride out the gap the same way.
+- **Claude is told what happened.** Every reconnect, dropout, and restore is appended to the next tool result, so Claude can react instead of guessing.
+- **Scanning is only done when needed.** If Intiface already has your toys connected, Signal Bridge sees them instantly. Ask for `scan_devices` if one is missing. `SB_SCAN_SECONDS` (default 5) sets how long a scan waits.
+
+Every connection event is also logged with a timestamp to the server's log (see [Troubleshooting](#troubleshooting) for where that lives).
 
 ### The Safety Governor
 
@@ -309,11 +326,20 @@ This is **not** a replacement for your own limits or a safeword — it's a last 
 - On Mac, try `pip3` instead of `pip`
 - If you see "pip is not recognized," Python may not be in your PATH — reinstall Python and check the "Add to PATH" box
 - If you see permission errors, try: `pip install --user mcp buttplug python-dotenv`
+- If the server fails with `No module named 'mcp.server.fastmcp'`, you have version 2 of the `mcp` package with a Signal Bridge older than v0.5. Either update Signal Bridge or run `pip install "mcp<2"`.
 
 ### Everything connects but nothing happens
 - Some devices need a minimum intensity to be perceptible (Enigma needs 0.4+). Ask Claude to try a higher intensity.
 - Check if the toy is actually connected in Intiface (sometimes Bluetooth drops silently)
 - Ask Claude to call `list_devices` to confirm it can see your hardware
+
+### A toy stops by itself, or the connection keeps dropping
+- **The Safety Governor may have fired.** With default settings a cooldown hits after roughly a minute at high intensity or a few minutes of pulsing. Ask Claude for `safety_status`; raise the limits or disable it (see above) if that's not what you want.
+- **`pulse` and `wave` end after their default duration** (10 and 15 seconds). Ask Claude to use `duration=0` for continuous patterns.
+- **Close the manufacturer's app on your phone** (Lovense Remote, We-Vibe, etc.). They reconnect to the toy aggressively and steal it from Intiface. Same for a second computer with Intiface running.
+- **Don't pair the toy in your computer's Bluetooth settings.** Intiface finds and connects to it directly; an OS-level pairing gets in the way. Unpair it if you did.
+- **Update Intiface Central** to 3.1.1 or newer. Earlier versions could stall on a flood of Bluetooth errors and stop sending commands.
+- **Read the server log.** Every dropout and reconnect is written there with a timestamp. Claude Desktop keeps it at `~/Library/Logs/Claude/mcp-server-signal-bridge.log` (Mac) or `%APPDATA%\Claude\logs\` (Windows). Claude Code keeps it under `~/Library/Caches/claude-cli-nodejs/<your-project-folder>/mcp-logs-signal-bridge/` (Mac) or `%LOCALAPPDATA%\claude-cli-nodejs\Cache\<your-project-folder>\mcp-logs-signal-bridge\` (Windows). Intiface Central's own Log tab shows the Bluetooth side.
 
 ---
 
@@ -357,6 +383,7 @@ No Python editing required. After the user saves `devices.json`, they need to re
 - Silence is powerful. Not every message needs a tool call.
 - Patterns (`pulse`, `wave`, `escalate`) feel more organic than static vibration
 - You can run multiple devices simultaneously by making separate tool calls
+- Tool results may end with bracketed notes like `[lush dropped off Bluetooth ...]` or `[Reconnected to Intiface Central ...]`. Read them: they tell you what the hardware just did. An offline toy comes back on its own; you don't need to hammer it with retries. If a result says a pattern was interrupted, decide whether to restart it.
 
 ---
 
